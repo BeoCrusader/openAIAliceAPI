@@ -2,18 +2,19 @@ import { Configuration, OpenAIApi } from "openai";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
-  httpApiKey: process.env.HTTP_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
 export default async function (req, res) {
-  const apiRequestKey = req.headers["X-API-KEY"]
-  if(configuration.httpApiKey != apiRequestKey) {
+  const httpApiKey = process.env.HTTP_API_KEY;
+  const apiRequestKey = req.headers["x-api-key"];
+  if(httpApiKey !== apiRequestKey) {
     res.status(403).json({
       error: {
         message: "Please use correct API key"
       }
     })
+   return;
   }
   if (!configuration.apiKey) {
     res.status(500).json({
@@ -39,8 +40,9 @@ export default async function (req, res) {
       model: "text-davinci-003",
       prompt: prompt,
       temperature: 0.6,
+	    max_tokens: 500,
     });
-    res.status(200).json({ result: completion.data.choices[0].text });
+    res.status(200).json({ result: completion.data });
   } catch(error) {
     // Consider adjusting the error handling logic for your use case
     if (error.response) {
